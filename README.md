@@ -278,5 +278,5 @@ but adding your vpn user and password by command line
 
 ## Issues
 
-If you have any problems with or questions about this image, please contact me
+If you have any problems with or questions about this image, please contact us
 through a [GitHub issue](https://github.com/dimonoff/openvpn-client/issues).
