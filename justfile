@@ -11,16 +11,46 @@ setup-builder:
 # Build docker images for all artchitectures
 build-all:
   #!/usr/bin/env bash
-  VERSION=$(grep -oP 'FROM alpine:\K[0-9.]+' ./Dockerfile)
+  DOCKERFILE="./Dockerfile.tunnel"
+  VERSION=$(grep -i 'FROM alpine' "$DOCKERFILE" | cut -d':' -f2)
   docker buildx build \
+    --file "$DOCKERFILE" \
+    --builder={{QEMU_BUILDER}} \
+    --platform linux/arm64/v8,linux/amd64 \
+    --push \
+    --tag "{{BASE_NAME}}:${VERSION}-tunnel" .
+
+  DOCKERFILE="./Dockerfile.vpn"
+  VERSION=$(grep -i 'FROM alpine' "$DOCKERFILE" | cut -d':' -f2)
+  docker buildx build \
+    --file "$DOCKERFILE" \
     --builder={{QEMU_BUILDER}} \
     --platform linux/arm64/v8,linux/amd64 \
     --tag "{{BASE_NAME}}:${VERSION}" .
 
+# Build docker images for all artchitectures
+build-local:
+  #!/usr/bin/env bash
+  docker build \
+    --file ./Dockerfile.tunnel \
+    --platform linux/arm64/v8 \
+    --tag "localhost:5000/openvpn-tunnel" .
+  docker build \
+    --file ./Dockerfile.vpn \
+    --platform linux/arm64/v8 \
+    --tag "localhost:5000/openvpn" .
+
 # Publish a new version 
 publish:
   #!/usr/bin/env bash
-  VERSION=$(grep -oP 'FROM alpine:\K[0-9.]+' ./Dockerfile)
+  TUNNEL_VERSION=$(grep -i 'FROM alpine' "$DOCKERFILE" | cut -d':' -f2)
+  VPN_VERSION=$(grep -i 'FROM alpine' "$DOCKERFILE" | cut -d':' -f2)
+  if [[ "$TUNNEL_VERSION" != "$VPN_VERSION" ]]; then
+    echo "Versions are different: $TUNNEL_VERSION != $VPN_VERSION"
+    exit 1
+  fi
+
+  VERSION=$TUNNEL_VERSION
   # Check if the tag already exists
   if git rev-parse "v${VERSION}" >/dev/null 2>&1; then
     echo "Tag v${VERSION} already exists"
