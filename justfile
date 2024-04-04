@@ -26,6 +26,7 @@ build-all:
     --file "$DOCKERFILE" \
     --builder={{QEMU_BUILDER}} \
     --platform linux/arm64/v8,linux/amd64 \
+    --push \
     --tag "{{BASE_NAME}}:${VERSION}" .
 
 # Build docker images for all artchitectures
@@ -43,13 +44,13 @@ build-local:
 # Publish a new version 
 publish:
   #!/usr/bin/env bash
-  TUNNEL_VERSION=$(grep -i 'FROM alpine' "$DOCKERFILE" | cut -d':' -f2)
-  VPN_VERSION=$(grep -i 'FROM alpine' "$DOCKERFILE" | cut -d':' -f2)
+  set -xe
+  TUNNEL_VERSION=$(grep -i 'FROM alpine' ./Dockerfile.tunnel | cut -d':' -f2)
+  VPN_VERSION=$(grep -i 'FROM alpine' ./Dockerfile.vpn | cut -d':' -f2)
   if [[ "$TUNNEL_VERSION" != "$VPN_VERSION" ]]; then
     echo "Versions are different: $TUNNEL_VERSION != $VPN_VERSION"
     exit 1
   fi
-
   VERSION=$TUNNEL_VERSION
   # Check if the tag already exists
   if git rev-parse "v${VERSION}" >/dev/null 2>&1; then
