@@ -5,7 +5,7 @@ set -xe
 
 # Function to display usage information
 usage() {
-    echo "Usage: ./openvpn-tunnel.sh --auth-user-pass /path/to/user-pass /path/to/your/client.ovpn"
+    echo "Usage: ./openvpn-tunnel.sh --auth-user-pass /path/to/user-pass --iptables-restore /path/to/iptables-restore.txt /path/to/your/client.ovpn"
     exit  1
 }
 
@@ -61,4 +61,4 @@ if [[ -z "$AUTH_USER_PASS" ]] || [[ -z "$CONFIG" ]]; then
 fi
 
 iptables-restore < "$IPTABLES_RULES"
-openvpn --config "$CONFIG" --auth-user-pass "$AUTH_USER_PASS"
+openvpn --config "$CONFIG" --auth-user-pass "$AUTH_USER_PASS" --script-security 2 --up /etc/openvpn/up.sh --down /etc/openvpn/down.sh
